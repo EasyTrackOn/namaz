@@ -76,20 +76,14 @@
       cursor: pointer;
       transition: all 0.15s ease;
     }
-    .choice-btn.btn-tick:hover {
-      border-color: #16a34a;
-      color: #16a34a;
-    }
+    .choice-btn.btn-tick:hover { border-color: #16a34a; color: #16a34a; }
     .choice-btn.btn-tick.active {
       background: #16a34a;
       border-color: #16a34a;
       color: #fff;
       box-shadow: 0 3px 8px rgba(22, 163, 74, 0.25);
     }
-    .choice-btn.btn-cross:hover {
-      border-color: #dc2626;
-      color: #dc2626;
-    }
+    .choice-btn.btn-cross:hover { border-color: #dc2626; color: #dc2626; }
     .choice-btn.btn-cross.active {
       background: #dc2626;
       border-color: #dc2626;
@@ -176,7 +170,6 @@
           </button>
         </div>
 
-        <!-- Date switcher inside tracker (auto-loads existing entries, blocks < 2026-11-16 and > Today) -->
         <div class="row g-2 align-items-center bg-light p-2 rounded-3 mb-2">
           <div class="col-auto">
             <label class="small fw-bold mb-0"><i class="bi bi-calendar3 me-1"></i>Date:</label>
@@ -189,17 +182,15 @@
           </div>
         </div>
 
-        <!-- Existing Record Status Banner -->
         <div id="existingStatusBanner" class="alert alert-info py-2 small mb-2 d-none"></div>
 
-        <!-- Live Response Counters (Tick vs Cross vs Unanswered) -->
         <div class="d-flex justify-content-between small fw-semibold mb-1 flex-wrap gap-1">
           <span>
             <span class="text-success me-2"><i class="bi bi-check-circle-fill"></i> Done: <strong id="cntDone">0</strong></span>
             <span class="text-danger me-2"><i class="bi bi-x-circle-fill"></i> Not Done: <strong id="cntCross">0</strong></span>
-            <span class="text-muted">Pending: <strong id="cntPending">14</strong></span>
+            <span class="text-muted">Pending: <strong id="cntPending">15</strong></span>
           </span>
-          <span id="lblAnsweredStatus">0 / 14 Answered</span>
+          <span id="lblAnsweredStatus">0 / 15 Answered</span>
         </div>
         <div class="progress" style="height: 10px;">
           <div id="progressBarDone" class="progress-bar bg-success" style="width: 0%"></div>
@@ -208,7 +199,7 @@
       </div>
 
       <div class="small text-muted mb-2 px-1">
-        Tap <strong class="text-success"><i class="bi bi-check-lg"></i> Tick</strong> if completed, or <strong class="text-danger"><i class="bi bi-x-lg"></i> Cross</strong> if not done. All 14 items require a response.
+        Tap <strong class="text-success"><i class="bi bi-check-lg"></i> Tick</strong> if completed, or <strong class="text-danger"><i class="bi bi-x-lg"></i> Cross</strong> if not done. All 15 items require a response.
       </div>
 
       <div id="habitsContainer"></div>
@@ -226,7 +217,7 @@
     <div id="adminLoginView" class="student-container d-none">
       <div class="card border-0 shadow-sm rounded-4 p-4">
         <h6 class="fw-bold mb-2"><i class="bi bi-shield-lock-fill me-2 text-dark"></i>Admin Login</h6>
-        <p class="small text-muted">Sign in to view consolidated student reports, response status, and graphs.</p>
+        <p class="small text-muted">Sign in to view consolidated student reports, individual student growth charts, and daily stats.</p>
         <div class="mb-3">
           <label class="form-label small fw-semibold">Admin PIN</label>
           <input type="password" id="adminPinInput" inputmode="numeric" placeholder="Enter Admin PIN" class="form-control form-control-lg" />
@@ -240,12 +231,12 @@
 
     <!-- ==================== 4. ADMIN DASHBOARD VIEW ==================== -->
     <div id="adminDashboardView" class="d-none">
-      <!-- Filter Bar -->
+      <!-- Top Filter & Student Selector Bar -->
       <div class="card border-0 shadow-sm rounded-4 p-3 mb-3">
         <div class="row g-3 align-items-end">
-          <div class="col-md-7">
+          <div class="col-md-5">
             <label class="form-label small fw-bold text-primary mb-1">
-              <i class="bi bi-funnel me-1"></i>Select Report Date <span class="text-muted fw-normal">(Nov 16, 2026 – Today)</span>
+              <i class="bi bi-funnel me-1"></i>Report Date <span class="text-muted fw-normal">(Nov 16 – Today)</span>
             </label>
             <div class="input-group">
               <input type="date" id="adminFilterDateInput" class="form-control" />
@@ -253,10 +244,57 @@
             </div>
             <div class="small fw-semibold text-muted mt-1" id="adminFilterDayLabel"></div>
           </div>
-          <div class="col-md-5 text-md-end">
-            <button id="btnAdminLogout" class="btn btn-outline-danger">
-              <i class="bi bi-box-arrow-right me-1"></i>Exit Admin
+          <div class="col-md-5">
+            <label class="form-label small fw-bold text-success mb-1">
+              <i class="bi bi-person-lines-fill me-1"></i>Inspect Individual Student
+            </label>
+            <select id="adminStudentSelect" class="form-select">
+              <option value="">-- Select Student for Detailed View --</option>
+            </select>
+            <div class="small text-muted mt-1">Or click any student row in the table below</div>
+          </div>
+          <div class="col-md-2 text-md-end">
+            <button id="btnAdminLogout" class="btn btn-outline-danger w-100">
+              <i class="bi bi-box-arrow-right me-1"></i>Exit
             </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- INDIVIDUAL STUDENT DETAIL + LINE GRAPH PANEL -->
+      <div id="studentDetailPanel" class="card border-2 border-primary shadow-sm rounded-4 p-3 mb-3 d-none">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pb-2 mb-3 border-bottom">
+          <div>
+            <span class="badge bg-primary mb-1">Individual Student Analytics</span>
+            <h5 class="fw-bold mb-0" id="detailStudentTitle">Student Name</h5>
+          </div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span id="detailTrendBadge" class="badge bg-secondary-subtle text-dark fs-6">Trend</span>
+            <div class="btn-group" role="group">
+              <button type="button" id="btnModeSelectedDate" class="btn btn-sm btn-primary fw-semibold">Selected Date</button>
+              <button type="button" id="btnModeOverall" class="btn btn-sm btn-outline-primary fw-semibold">Overall</button>
+            </div>
+            <button type="button" id="btnCloseStudentDetail" class="btn btn-sm btn-outline-secondary" title="Close">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <!-- Line Graph: Performance Trend Over Time -->
+          <div class="col-lg-6">
+            <div class="border rounded-3 p-3 h-100 bg-white">
+              <h6 class="fw-bold mb-2"><i class="bi bi-graph-up me-1 text-success"></i>Performance Progress Line Graph</h6>
+              <canvas id="studentTrendLineChart" height="210"></canvas>
+            </div>
+          </div>
+
+          <!-- Selected Date vs Overall Breakdown -->
+          <div class="col-lg-6">
+            <div class="border rounded-3 p-3 h-100 bg-white">
+              <div class="row g-2 mb-3" id="detailSummaryStats"></div>
+              <div id="detailHabitsBreakdown" style="max-height: 260px; overflow-y: auto;"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -289,11 +327,11 @@
         </div>
       </div>
 
-      <!-- Charts Row -->
+      <!-- Class-Wide Charts Row -->
       <div class="row g-3 mb-3">
         <div class="col-lg-6">
           <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-            <h6 class="fw-bold mb-2">Student Scores (Selected Date)</h6>
+            <h6 class="fw-bold mb-2">Class Scores (Selected Date)</h6>
             <canvas id="studentBarChart" height="220"></canvas>
           </div>
         </div>
@@ -308,7 +346,7 @@
       <!-- Consolidated Student Table -->
       <div class="card border-0 shadow-sm rounded-4 p-3">
         <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-          <h6 class="fw-bold mb-0"><i class="bi bi-table me-2"></i>Consolidated Student Report</h6>
+          <h6 class="fw-bold mb-0"><i class="bi bi-table me-2"></i>Consolidated Student Report <span class="small text-muted fw-normal">(Click any student for details)</span></h6>
           <input type="text" id="adminSearchInput" class="form-control form-control-sm" style="max-width: 240px;" placeholder="Filter by Ad No or Name..." />
         </div>
         <div class="table-responsive">
@@ -332,61 +370,12 @@
     </div>
   </div>
 
+  <!-- Shared Config & Admin Module -->
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+
+  <!-- Student Flow Script -->
   <script>
-    // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL BELOW
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrih5qsSLkC3qMYEty3yx-x44tuIk4Jj4PZgSpY3WOkOyA2QXaZs6aFUJlHTRaUe19Pw/exec";
-const START_DATE = "2026-11-16";
-
-    let state = {
-      habits: [],
-      minAllowedDate: START_DATE,
-      maxAllowedDate: "",
-      currentUser: null,
-      responses: {}, // { h1: "DONE" | "NOT_DONE" }
-      adminPin: "",
-      consolidatedData: [],
-      charts: { student: null, habit: null }
-    };
-
-    function getTodayLocalISO() {
-      const now = new Date();
-      const offset = now.getTimezoneOffset() * 60000;
-      return new Date(now - offset).toISOString().slice(0, 10);
-    }
-
-    function formatReadableDateWithDay(isoDate) {
-      if (!isoDate) return "";
-      const [y, m, d] = isoDate.split("-").map(Number);
-      const dt = new Date(y, m - 1, d);
-      return dt.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "short", day: "numeric" });
-    }
-
-    function getDayOnly(isoDate) {
-      if (!isoDate) return "";
-      const [y, m, d] = isoDate.split("-").map(Number);
-      return new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "long" });
-    }
-
-    function applyDateConstraints(minDate, maxDate) {
-      state.minAllowedDate = minDate;
-      state.maxAllowedDate = maxDate;
-      ["dateInput", "trackerDateInput", "adminFilterDateInput"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.min = minDate;
-          el.max = maxDate;
-        }
-      });
-    }
-
-    function clampDate(isoDate) {
-      if (!isoDate) return state.maxAllowedDate;
-      if (isoDate < state.minAllowedDate) return state.minAllowedDate;
-      if (isoDate > state.maxAllowedDate) return state.maxAllowedDate;
-      return isoDate;
-    }
-
-    // Initialize App
     async function initApp() {
       const localToday = getTodayLocalISO();
       const effectiveMax = localToday < START_DATE ? START_DATE : localToday;
@@ -402,26 +391,24 @@ const START_DATE = "2026-11-16";
         const data = await res.json();
         if (data.status !== "success") throw new Error(data.message);
 
-        state.habits = data.habits;
+        appState.habits = data.habits;
         const serverToday = data.todayDate || effectiveMax;
         applyDateConstraints(data.startDate || START_DATE, serverToday);
 
         document.getElementById("badgeWindowInfo").textContent =
-          `${formatReadableDateWithDay(state.minAllowedDate)} – ${formatReadableDateWithDay(state.maxAllowedDate)}`;
-        document.getElementById("dateInput").value = state.maxAllowedDate;
-        document.getElementById("loginDayDisplay").textContent = formatReadableDateWithDay(state.maxAllowedDate);
+          `${formatReadableDateWithDay(appState.minAllowedDate)} – ${formatReadableDateWithDay(appState.maxAllowedDate)}`;
+        document.getElementById("dateInput").value = appState.maxAllowedDate;
+        document.getElementById("loginDayDisplay").textContent = formatReadableDateWithDay(appState.maxAllowedDate);
       } catch (err) {
         document.getElementById("badgeWindowInfo").textContent = "Connection Error";
       }
     }
 
-    // Block dates < 2026-11-16 and > Today on Login Date Picker
     document.getElementById("dateInput").addEventListener("change", (e) => {
       e.target.value = clampDate(e.target.value);
       document.getElementById("loginDayDisplay").textContent = formatReadableDateWithDay(e.target.value);
     });
 
-    // Student Login by Admission Number
     document.getElementById("btnLogin").addEventListener("click", async () => {
       const adNo = document.getElementById("adNoInput").value.trim();
       const selectedDate = clampDate(document.getElementById("dateInput").value);
@@ -449,7 +436,7 @@ const START_DATE = "2026-11-16";
           errBox.textContent = data.message;
           errBox.classList.remove("d-none");
         } else {
-          state.currentUser = { adNo: data.adNo, name: data.studentName };
+          appState.currentUser = { adNo: data.adNo, name: data.studentName };
           applyLoadedDayState(data);
           showView("trackerView");
         }
@@ -462,7 +449,6 @@ const START_DATE = "2026-11-16";
       }
     });
 
-    // Auto-load existing data when student switches dates inside tracker
     document.getElementById("trackerDateInput").addEventListener("change", async (e) => {
       const chosenDate = clampDate(e.target.value);
       e.target.value = chosenDate;
@@ -472,7 +458,7 @@ const START_DATE = "2026-11-16";
       container.style.opacity = "0.5";
 
       try {
-        const url = `${SCRIPT_URL}?action=loadDate&adNo=${encodeURIComponent(state.currentUser.adNo)}&selectedDate=${encodeURIComponent(chosenDate)}`;
+        const url = `${SCRIPT_URL}?action=loadDate&adNo=${encodeURIComponent(appState.currentUser.adNo)}&selectedDate=${encodeURIComponent(chosenDate)}`;
         const res = await fetch(url);
         const data = await res.json();
         if (data.status === "success") {
@@ -484,11 +470,11 @@ const START_DATE = "2026-11-16";
     });
 
     function applyLoadedDayState(data) {
-      state.responses = data.responses || {};
+      appState.responses = data.responses || {};
       document.getElementById("saveErrorBanner").classList.add("d-none");
 
-      document.getElementById("lblAdNo").textContent = "Ad No: " + state.currentUser.adNo;
-      document.getElementById("lblStudentName").textContent = state.currentUser.name;
+      document.getElementById("lblAdNo").textContent = "Ad No: " + appState.currentUser.adNo;
+      document.getElementById("lblStudentName").textContent = appState.currentUser.name;
       document.getElementById("trackerDateInput").value = data.selectedDate;
       document.getElementById("trackerDayBadge").textContent = getDayOnly(data.selectedDate);
 
@@ -508,7 +494,7 @@ const START_DATE = "2026-11-16";
       container.innerHTML = "";
       let lastCat = "";
 
-      state.habits.forEach(h => {
+      appState.habits.forEach(h => {
         if (h.cat !== lastCat) {
           lastCat = h.cat;
           const header = document.createElement("div");
@@ -517,7 +503,7 @@ const START_DATE = "2026-11-16";
           container.appendChild(header);
         }
 
-        const val = state.responses[h.id]; // "DONE" | "NOT_DONE" | undefined
+        const val = appState.responses[h.id];
         const card = document.createElement("div");
         card.className = `habit-card ${val === "DONE" ? "state-done" : val === "NOT_DONE" ? "state-cross" : ""}`;
 
@@ -540,7 +526,7 @@ const START_DATE = "2026-11-16";
         const btnCross = card.querySelector(".btn-cross");
 
         btnTick.addEventListener("click", () => {
-          state.responses[h.id] = "DONE";
+          appState.responses[h.id] = "DONE";
           card.classList.remove("state-cross");
           card.classList.add("state-done");
           btnTick.classList.add("active");
@@ -549,7 +535,7 @@ const START_DATE = "2026-11-16";
         });
 
         btnCross.addEventListener("click", () => {
-          state.responses[h.id] = "NOT_DONE";
+          appState.responses[h.id] = "NOT_DONE";
           card.classList.remove("state-done");
           card.classList.add("state-cross");
           btnCross.classList.add("active");
@@ -564,9 +550,9 @@ const START_DATE = "2026-11-16";
     }
 
     function updateScoreUI() {
-      const total = state.habits.length;
-      const done = state.habits.filter(h => state.responses[h.id] === "DONE").length;
-      const cross = state.habits.filter(h => state.responses[h.id] === "NOT_DONE").length;
+      const total = appState.habits.length;
+      const done = appState.habits.filter(h => appState.responses[h.id] === "DONE").length;
+      const cross = appState.habits.filter(h => appState.responses[h.id] === "NOT_DONE").length;
       const answered = done + cross;
 
       document.getElementById("cntDone").textContent = done;
@@ -582,10 +568,9 @@ const START_DATE = "2026-11-16";
       }
     }
 
-    // Save or Update Responses (requires all 14 items to have Tick or Cross)
     document.getElementById("btnSave").addEventListener("click", async () => {
       const errBanner = document.getElementById("saveErrorBanner");
-      const unanswered = state.habits.filter(h => !state.responses[h.id]);
+      const unanswered = appState.habits.filter(h => !appState.responses[h.id]);
 
       if (unanswered.length > 0) {
         errBanner.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i> Please mark <strong>Tick (✓)</strong> or <strong>Cross (✕)</strong> for all remaining <strong>${unanswered.length}</strong> item(s) before saving.`;
@@ -604,10 +589,10 @@ const START_DATE = "2026-11-16";
           method: "POST",
           body: JSON.stringify({
             action: "save",
-            adNo: state.currentUser.adNo,
-            studentName: state.currentUser.name,
+            adNo: appState.currentUser.adNo,
+            studentName: appState.currentUser.name,
             date: selectedDate,
-            responses: state.responses
+            responses: appState.responses
           })
         });
         const data = await res.json();
@@ -616,7 +601,7 @@ const START_DATE = "2026-11-16";
           banner.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> <strong>${data.updated ? "Responses Updated" : "Responses Saved"}</strong> at ${data.savedTime}.`;
           banner.classList.remove("d-none");
 
-          btn.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i> Saved (${data.score}/14 Done)!`;
+          btn.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i> Saved (${data.score}/15 Done)!`;
           setTimeout(() => {
             btn.innerHTML = `<i class="bi bi-cloud-check-fill me-2"></i> Save My Responses`;
             btn.disabled = false;
@@ -635,183 +620,8 @@ const START_DATE = "2026-11-16";
       }
     });
 
-    // ==================== ADMIN FLOW ====================
-    document.getElementById("btnShowAdminLogin").addEventListener("click", () => showView("adminLoginView"));
-    document.getElementById("btnShowStudentLogin").addEventListener("click", () => showView("studentLoginView"));
-    document.getElementById("btnAdminLogout").addEventListener("click", () => {
-      state.adminPin = "";
-      document.getElementById("adminPinInput").value = "";
-      showView("studentLoginView");
-    });
-
-    document.getElementById("adminFilterDateInput").addEventListener("change", (e) => {
-      e.target.value = clampDate(e.target.value);
-      document.getElementById("adminFilterDayLabel").textContent = formatReadableDateWithDay(e.target.value);
-    });
-
-    document.getElementById("btnAdminLogin").addEventListener("click", async () => {
-      const pin = document.getElementById("adminPinInput").value.trim();
-      const errBox = document.getElementById("adminLoginError");
-      if (!pin) return;
-
-      errBox.classList.add("d-none");
-      const btn = document.getElementById("btnAdminLogin");
-      btn.disabled = true;
-      btn.textContent = "Authenticating...";
-
-      try {
-        const res = await fetch(`${SCRIPT_URL}?action=adminLogin&adminPin=${encodeURIComponent(pin)}`);
-        const data = await res.json();
-        if (data.status !== "success") {
-          errBox.textContent = data.message;
-          errBox.classList.remove("d-none");
-        } else {
-          state.adminPin = pin;
-          renderAdminDashboard(data);
-          showView("adminDashboardView");
-        }
-      } catch (err) {
-        errBox.textContent = "Error: " + err.message;
-        errBox.classList.remove("d-none");
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<i class="bi bi-unlock-fill me-1"></i> Access Admin Dashboard`;
-      }
-    });
-
-    document.getElementById("btnRefreshReport").addEventListener("click", async () => {
-      const filterDate = clampDate(document.getElementById("adminFilterDateInput").value);
-      document.getElementById("adminFilterDateInput").value = filterDate;
-      const res = await fetch(`${SCRIPT_URL}?action=adminLogin&adminPin=${encodeURIComponent(state.adminPin)}&filterDate=${encodeURIComponent(filterDate)}`);
-      const data = await res.json();
-      if (data.status === "success") renderAdminDashboard(data);
-    });
-
-    function renderAdminDashboard(data) {
-      state.consolidatedData = data.consolidated;
-
-      const clampedTarget = clampDate(data.targetDate);
-      document.getElementById("adminFilterDateInput").value = clampedTarget;
-      document.getElementById("adminFilterDayLabel").textContent = formatReadableDateWithDay(clampedTarget);
-
-      const submittedCount = data.targetDateSubmissions;
-      const total = data.totalStudents;
-      document.getElementById("kpiSubmitted").textContent = `${submittedCount} / ${total}`;
-      document.getElementById("kpiPending").textContent = `${total - submittedCount}`;
-
-      const submittedRows = data.consolidated.filter(r => r.submitted);
-      const avgDaily = submittedRows.length
-        ? Math.round((submittedRows.reduce((s, r) => s + r.dailyScore, 0) / (submittedRows.length * 14)) * 100)
-        : 0;
-      const fullSalah = submittedRows.filter(r => r.dailySalah === 5).length;
-
-      document.getElementById("kpiClassAvg").textContent = `${avgDaily}%`;
-      document.getElementById("kpiFullSalah").textContent = `${fullSalah}`;
-
-      renderConsolidatedTable(data.consolidated);
-      renderAdminCharts(data.consolidated, data.habitBreakdown);
-    }
-
-    function renderConsolidatedTable(rows) {
-      const tbody = document.getElementById("consolidatedTableBody");
-      tbody.innerHTML = rows.map(r => `
-        <tr>
-          <td class="fw-bold">${r.adNo}</td>
-          <td>${r.name}</td>
-          <td>
-            ${r.submitted
-              ? `<span class="badge bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>Responded</span>`
-              : `<span class="badge bg-danger-subtle text-danger"><i class="bi bi-clock me-1"></i>No Response</span>`}
-          </td>
-          <td class="fw-semibold">${r.submitted ? `${r.dailyScore} / 14` : "-"}</td>
-          <td>${r.submitted ? `${r.dailySalah} / 5` : "-"}</td>
-          <td class="text-muted">${r.time}</td>
-          <td>${r.daysLogged}</td>
-          <td>
-            <div class="d-flex align-items-center gap-2">
-              <div class="progress flex-grow-1" style="height: 6px; min-width: 50px;">
-                <div class="progress-bar" style="width:${r.avgPct}%; background:#0f766e;"></div>
-              </div>
-              <span class="fw-semibold">${r.avgPct}%</span>
-            </div>
-          </td>
-        </tr>
-      `).join("");
-    }
-
-    document.getElementById("adminSearchInput").addEventListener("input", (e) => {
-      const q = e.target.value.toLowerCase();
-      const filtered = state.consolidatedData.filter(r =>
-        r.adNo.toLowerCase().includes(q) || r.name.toLowerCase().includes(q)
-      );
-      renderConsolidatedTable(filtered);
-    });
-
-    function renderAdminCharts(consolidated, habitBreakdown) {
-      if (state.charts.student) state.charts.student.destroy();
-      if (state.charts.habit) state.charts.habit.destroy();
-
-      const ctx1 = document.getElementById("studentBarChart");
-      state.charts.student = new Chart(ctx1, {
-        type: "bar",
-        data: {
-          labels: consolidated.map(s => s.adNo),
-          datasets: [{
-            label: "Done (✓) out of 14",
-            data: consolidated.map(s => s.dailyScore),
-            backgroundColor: consolidated.map(s => s.submitted ? "#0f766e" : "#cbd5e1"),
-            borderRadius: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: { y: { beginAtZero: true, max: 14 } },
-          plugins: { legend: { display: false } }
-        }
-      });
-
-      const ctx2 = document.getElementById("habitBarChart");
-      state.charts.habit = new Chart(ctx2, {
-        type: "bar",
-        data: {
-          labels: habitBreakdown.map(h => h.label),
-          datasets: [
-            {
-              label: "Done (✓)",
-              data: habitBreakdown.map(h => h.doneCount),
-              backgroundColor: "#16a34a",
-              borderRadius: 4
-            },
-            {
-              label: "Not Done (✕)",
-              data: habitBreakdown.map(h => h.crossCount),
-              backgroundColor: "#dc2626",
-              borderRadius: 4
-            }
-          ]
-        },
-        options: {
-          indexAxis: "y",
-          responsive: true,
-          scales: {
-            x: { stacked: true, beginAtZero: true, max: consolidated.length || 20 },
-            y: { stacked: true }
-          }
-        }
-      });
-    }
-
-    function showView(viewId) {
-      ["studentLoginView", "trackerView", "adminLoginView", "adminDashboardView"].forEach(id => {
-        document.getElementById(id).classList.toggle("d-none", id !== viewId);
-      });
-      const isAdminArea = (viewId === "adminLoginView" || viewId === "adminDashboardView");
-      document.getElementById("btnShowStudentLogin").classList.toggle("d-none", !isAdminArea);
-      document.getElementById("btnShowAdminLogin").classList.toggle("d-none", isAdminArea);
-    }
-
     document.getElementById("btnLogout").addEventListener("click", () => {
-      state.currentUser = null;
+      appState.currentUser = null;
       document.getElementById("pinInput").value = "";
       showView("studentLoginView");
     });
