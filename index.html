@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,7 +11,10 @@
     :root {
       --primary: #0f766e;
       --primary-dark: #115e59;
-      --primary-soft: #f0fdfa;
+      --done-bg: #f0fdf4;
+      --done-border: #16a34a;
+      --cross-bg: #fef2f2;
+      --cross-border: #dc2626;
     }
     body {
       background: #f1f5f9;
@@ -25,7 +27,7 @@
       padding: 16px;
     }
     .student-container {
-      max-width: 640px;
+      max-width: 660px;
       margin: 0 auto;
     }
     .hero-card {
@@ -44,34 +46,55 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      cursor: pointer;
+      gap: 10px;
       transition: all 0.15s ease;
-      user-select: none;
     }
-    .habit-card:hover { border-color: var(--primary); }
-    .habit-card.checked {
-      background: var(--primary-soft);
-      border-color: var(--primary);
+    .habit-card.state-done {
+      background: var(--done-bg);
+      border-color: var(--done-border);
     }
-    .habit-card.locked {
-      opacity: 0.72;
-      cursor: not-allowed;
+    .habit-card.state-cross {
+      background: var(--cross-bg);
+      border-color: var(--cross-border);
     }
-    .check-circle {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      border: 2px solid #cbd5e1;
+    .choice-group {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .choice-btn {
+      width: 42px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1.5px solid #cbd5e1;
+      background: #fff;
+      color: #64748b;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: transparent;
-      flex-shrink: 0;
+      font-size: 1.15rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
     }
-    .habit-card.checked .check-circle {
-      background: var(--primary);
-      border-color: var(--primary);
+    .choice-btn.btn-tick:hover {
+      border-color: #16a34a;
+      color: #16a34a;
+    }
+    .choice-btn.btn-tick.active {
+      background: #16a34a;
+      border-color: #16a34a;
       color: #fff;
+      box-shadow: 0 3px 8px rgba(22, 163, 74, 0.25);
+    }
+    .choice-btn.btn-cross:hover {
+      border-color: #dc2626;
+      color: #dc2626;
+    }
+    .choice-btn.btn-cross.active {
+      background: #dc2626;
+      border-color: #dc2626;
+      color: #fff;
+      box-shadow: 0 3px 8px rgba(220, 38, 38, 0.25);
     }
     .cat-header {
       font-size: 0.78rem;
@@ -109,8 +132,8 @@
         </div>
       </div>
       <div class="mt-3 pt-2 border-top border-white border-opacity-25 d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <span class="small"><i class="bi bi-calendar-check me-1"></i>Admin Enabled Date:</span>
-        <span class="badge bg-warning text-dark fs-6" id="badgeActiveDate">Loading...</span>
+        <span class="small"><i class="bi bi-calendar-range me-1"></i>Active Entry Window:</span>
+        <span class="badge bg-warning text-dark" id="badgeWindowInfo">Nov 16, 2026 – Today</span>
       </div>
     </div>
 
@@ -124,7 +147,7 @@
         </div>
         <div class="row g-2 mb-3">
           <div class="col-7">
-            <label class="form-label small fw-semibold">Select Date <span class="text-muted">(Start – Today)</span></label>
+            <label class="form-label small fw-semibold">Select Date <span class="text-muted">(16 Nov – Today)</span></label>
             <input type="date" id="dateInput" class="form-control form-control-lg" />
             <div class="small fw-semibold text-primary mt-1" id="loginDayDisplay"></div>
           </div>
@@ -153,7 +176,7 @@
           </button>
         </div>
 
-        <!-- Date switcher inside tracker (auto-loads existing entries, blocks past/future dates) -->
+        <!-- Date switcher inside tracker (auto-loads existing entries, blocks < 2026-11-16 and > Today) -->
         <div class="row g-2 align-items-center bg-light p-2 rounded-3 mb-2">
           <div class="col-auto">
             <label class="small fw-bold mb-0"><i class="bi bi-calendar3 me-1"></i>Date:</label>
@@ -162,33 +185,39 @@
             <input type="date" id="trackerDateInput" class="form-control form-control-sm" />
           </div>
           <div class="col-auto">
-            <span class="badge bg-primary-subtle text-primary fs-6" id="trackerDayBadge">Monday</span>
+            <span class="badge bg-primary-subtle text-primary fs-6" id="trackerDayBadge">Tuesday</span>
           </div>
         </div>
 
-        <!-- Existing Record Status Pill -->
+        <!-- Existing Record Status Banner -->
         <div id="existingStatusBanner" class="alert alert-info py-2 small mb-2 d-none"></div>
 
-        <!-- Lock Warning if selected date != Admin ActiveDate -->
-        <div id="lockBanner" class="alert alert-warning py-2 small mb-2 d-none">
-          <i class="bi bi-lock-fill me-1"></i> <strong>Read Only:</strong> Admin has not enabled editing for this date.
-        </div>
-
-        <!-- Progress Bar -->
-        <div class="d-flex justify-content-between small fw-semibold mb-1">
-          <span>Daily Completion</span>
-          <span id="lblScore">0 / 14 (0%)</span>
+        <!-- Live Response Counters (Tick vs Cross vs Unanswered) -->
+        <div class="d-flex justify-content-between small fw-semibold mb-1 flex-wrap gap-1">
+          <span>
+            <span class="text-success me-2"><i class="bi bi-check-circle-fill"></i> Done: <strong id="cntDone">0</strong></span>
+            <span class="text-danger me-2"><i class="bi bi-x-circle-fill"></i> Not Done: <strong id="cntCross">0</strong></span>
+            <span class="text-muted">Pending: <strong id="cntPending">14</strong></span>
+          </span>
+          <span id="lblAnsweredStatus">0 / 14 Answered</span>
         </div>
         <div class="progress" style="height: 10px;">
-          <div id="progressBar" class="progress-bar bg-success" style="width: 0%"></div>
+          <div id="progressBarDone" class="progress-bar bg-success" style="width: 0%"></div>
+          <div id="progressBarCross" class="progress-bar bg-danger" style="width: 0%"></div>
         </div>
+      </div>
+
+      <div class="small text-muted mb-2 px-1">
+        Tap <strong class="text-success"><i class="bi bi-check-lg"></i> Tick</strong> if completed, or <strong class="text-danger"><i class="bi bi-x-lg"></i> Cross</strong> if not done. All 14 items require a response.
       </div>
 
       <div id="habitsContainer"></div>
 
+      <div id="saveErrorBanner" class="alert alert-danger py-2 small mt-2 d-none"></div>
+
       <div id="saveBar" class="sticky-bottom py-3">
         <button id="btnSave" class="btn btn-lg w-100 text-white fw-bold shadow" style="background: var(--primary);">
-          <i class="bi bi-cloud-check-fill me-2"></i> Save Progress
+          <i class="bi bi-cloud-check-fill me-2"></i> Save My Responses
         </button>
       </div>
     </div>
@@ -197,7 +226,7 @@
     <div id="adminLoginView" class="student-container d-none">
       <div class="card border-0 shadow-sm rounded-4 p-4">
         <h6 class="fw-bold mb-2"><i class="bi bi-shield-lock-fill me-2 text-dark"></i>Admin Login</h6>
-        <p class="small text-muted">Sign in to manage active dates and view consolidated student reports & graphs.</p>
+        <p class="small text-muted">Sign in to view consolidated student reports, response status, and graphs.</p>
         <div class="mb-3">
           <label class="form-label small fw-semibold">Admin PIN</label>
           <input type="password" id="adminPinInput" inputmode="numeric" placeholder="Enter Admin PIN" class="form-control form-control-lg" />
@@ -211,55 +240,44 @@
 
     <!-- ==================== 4. ADMIN DASHBOARD VIEW ==================== -->
     <div id="adminDashboardView" class="d-none">
-      <!-- Admin Controls Row -->
+      <!-- Filter Bar -->
       <div class="card border-0 shadow-sm rounded-4 p-3 mb-3">
         <div class="row g-3 align-items-end">
-          <div class="col-md-5">
-            <label class="form-label small fw-bold text-success mb-1">
-              <i class="bi bi-toggle-on me-1"></i>Set Active Date for Student Entry
-            </label>
-            <div class="input-group">
-              <input type="date" id="adminEnableDateInput" class="form-control" />
-              <button id="btnSetActiveDate" class="btn btn-success fw-semibold">Enable</button>
-            </div>
-            <div class="small text-muted mt-1" id="adminEnableDayLabel"></div>
-          </div>
-          <div class="col-md-5">
+          <div class="col-md-7">
             <label class="form-label small fw-bold text-primary mb-1">
-              <i class="bi bi-funnel me-1"></i>Inspect Report Date
+              <i class="bi bi-funnel me-1"></i>Select Report Date <span class="text-muted fw-normal">(Nov 16, 2026 – Today)</span>
             </label>
             <div class="input-group">
               <input type="date" id="adminFilterDateInput" class="form-control" />
-              <button id="btnRefreshReport" class="btn btn-primary fw-semibold">Load</button>
+              <button id="btnRefreshReport" class="btn btn-primary fw-semibold">Load Report</button>
             </div>
-            <div class="small text-muted mt-1" id="adminFilterDayLabel"></div>
+            <div class="small fw-semibold text-muted mt-1" id="adminFilterDayLabel"></div>
           </div>
-          <div class="col-md-2 text-end">
-            <button id="btnAdminLogout" class="btn btn-outline-danger w-100">
-              <i class="bi bi-box-arrow-right me-1"></i>Exit
+          <div class="col-md-5 text-md-end">
+            <button id="btnAdminLogout" class="btn btn-outline-danger">
+              <i class="bi bi-box-arrow-right me-1"></i>Exit Admin
             </button>
           </div>
         </div>
-        <div id="adminActionMsg" class="small fw-semibold mt-2"></div>
       </div>
 
       <!-- KPI Summary Cards -->
       <div class="row g-3 mb-3">
         <div class="col-6 col-md-3">
           <div class="kpi-card">
-            <div class="small text-muted">Submitted Today</div>
+            <div class="small text-muted">Responded</div>
             <div class="fs-4 fw-bold text-primary" id="kpiSubmitted">0 / 20</div>
           </div>
         </div>
         <div class="col-6 col-md-3">
           <div class="kpi-card">
-            <div class="small text-muted">Pending Entry</div>
+            <div class="small text-muted">Not Responded</div>
             <div class="fs-4 fw-bold text-danger" id="kpiPending">20</div>
           </div>
         </div>
         <div class="col-6 col-md-3">
           <div class="kpi-card">
-            <div class="small text-muted">Class Daily Avg</div>
+            <div class="small text-muted">Class Done Rate</div>
             <div class="fs-4 fw-bold text-success" id="kpiClassAvg">0%</div>
           </div>
         </div>
@@ -281,7 +299,7 @@
         </div>
         <div class="col-lg-6">
           <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-            <h6 class="fw-bold mb-2">Habit-Wise Completion Across Class</h6>
+            <h6 class="fw-bold mb-2">Habit Breakdown: Done (✓) vs Not Done (✕)</h6>
             <canvas id="habitBarChart" height="220"></canvas>
           </div>
         </div>
@@ -299,10 +317,10 @@
               <tr>
                 <th>Ad No</th>
                 <th>Student Name</th>
-                <th>Status</th>
-                <th>Day Score</th>
+                <th>Response Status</th>
+                <th>Done (✓)</th>
                 <th>Fard Salah</th>
-                <th>Updated At</th>
+                <th>Submitted At</th>
                 <th>Days Logged</th>
                 <th>Overall Avg</th>
               </tr>
@@ -317,15 +335,14 @@
   <script>
     // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL BELOW
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrih5qsSLkC3qMYEty3yx-x44tuIk4Jj4PZgSpY3WOkOyA2QXaZs6aFUJlHTRaUe19Pw/exec";
+const START_DATE = "2026-11-16";
 
     let state = {
       habits: [],
-      activeDate: "",
-      minAllowedDate: "",
+      minAllowedDate: START_DATE,
       maxAllowedDate: "",
       currentUser: null,
-      checks: {},
-      isEditable: false,
+      responses: {}, // { h1: "DONE" | "NOT_DONE" }
       adminPin: "",
       consolidatedData: [],
       charts: { student: null, habit: null }
@@ -353,7 +370,7 @@
     function applyDateConstraints(minDate, maxDate) {
       state.minAllowedDate = minDate;
       state.maxAllowedDate = maxDate;
-      ["dateInput", "trackerDateInput", "adminEnableDateInput", "adminFilterDateInput"].forEach(id => {
+      ["dateInput", "trackerDateInput", "adminFilterDateInput"].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
           el.min = minDate;
@@ -372,7 +389,13 @@
     // Initialize App
     async function initApp() {
       const localToday = getTodayLocalISO();
-      applyDateConstraints(localToday, localToday);
+      const effectiveMax = localToday < START_DATE ? START_DATE : localToday;
+      applyDateConstraints(START_DATE, effectiveMax);
+
+      document.getElementById("badgeWindowInfo").textContent =
+        `${formatReadableDateWithDay(START_DATE)} – ${formatReadableDateWithDay(effectiveMax)}`;
+      document.getElementById("dateInput").value = effectiveMax;
+      document.getElementById("loginDayDisplay").textContent = formatReadableDateWithDay(effectiveMax);
 
       try {
         const res = await fetch(`${SCRIPT_URL}?action=init`);
@@ -380,21 +403,19 @@
         if (data.status !== "success") throw new Error(data.message);
 
         state.habits = data.habits;
-        const effectiveMin = data.startDate && data.startDate <= localToday ? data.startDate : localToday;
-        const effectiveMax = localToday; // Never allow future dates beyond today
-        applyDateConstraints(effectiveMin, effectiveMax);
+        const serverToday = data.todayDate || effectiveMax;
+        applyDateConstraints(data.startDate || START_DATE, serverToday);
 
-        state.activeDate = clampDate(data.activeDate);
-        document.getElementById("badgeActiveDate").textContent = formatReadableDateWithDay(state.activeDate);
-
-        document.getElementById("dateInput").value = state.activeDate;
-        document.getElementById("loginDayDisplay").textContent = formatReadableDateWithDay(state.activeDate);
+        document.getElementById("badgeWindowInfo").textContent =
+          `${formatReadableDateWithDay(state.minAllowedDate)} – ${formatReadableDateWithDay(state.maxAllowedDate)}`;
+        document.getElementById("dateInput").value = state.maxAllowedDate;
+        document.getElementById("loginDayDisplay").textContent = formatReadableDateWithDay(state.maxAllowedDate);
       } catch (err) {
-        document.getElementById("badgeActiveDate").textContent = "Connection Error";
+        document.getElementById("badgeWindowInfo").textContent = "Connection Error";
       }
     }
 
-    // Update day label & block past/future dates on login date change
+    // Block dates < 2026-11-16 and > Today on Login Date Picker
     document.getElementById("dateInput").addEventListener("change", (e) => {
       e.target.value = clampDate(e.target.value);
       document.getElementById("loginDayDisplay").textContent = formatReadableDateWithDay(e.target.value);
@@ -441,7 +462,7 @@
       }
     });
 
-    // Auto-load existing data when student switches dates inside tracker (prevents double entry & blocks past/future dates)
+    // Auto-load existing data when student switches dates inside tracker
     document.getElementById("trackerDateInput").addEventListener("change", async (e) => {
       const chosenDate = clampDate(e.target.value);
       e.target.value = chosenDate;
@@ -463,8 +484,8 @@
     });
 
     function applyLoadedDayState(data) {
-      state.checks = data.checks || {};
-      state.isEditable = data.isEditable;
+      state.responses = data.responses || {};
+      document.getElementById("saveErrorBanner").classList.add("d-none");
 
       document.getElementById("lblAdNo").textContent = "Ad No: " + state.currentUser.adNo;
       document.getElementById("lblStudentName").textContent = state.currentUser.name;
@@ -473,20 +494,10 @@
 
       const existingBanner = document.getElementById("existingStatusBanner");
       if (data.alreadyEntered) {
-        existingBanner.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> <strong>Already Entered</strong> (Last saved at ${data.lastSavedTime}). Loaded your saved record below to avoid duplicate entries.`;
+        existingBanner.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> <strong>Already Responded</strong> (Saved at ${data.lastSavedTime}). Previous Tick/Cross entries loaded below.`;
         existingBanner.classList.remove("d-none");
       } else {
         existingBanner.classList.add("d-none");
-      }
-
-      const lockBanner = document.getElementById("lockBanner");
-      const saveBar = document.getElementById("saveBar");
-      if (state.isEditable) {
-        lockBanner.classList.add("d-none");
-        saveBar.classList.remove("d-none");
-      } else {
-        lockBanner.classList.remove("d-none");
-        saveBar.classList.add("d-none");
       }
 
       renderChecklist();
@@ -506,24 +517,46 @@
           container.appendChild(header);
         }
 
-        const isChecked = Boolean(state.checks[h.id]);
+        const val = state.responses[h.id]; // "DONE" | "NOT_DONE" | undefined
         const card = document.createElement("div");
-        card.className = `habit-card ${isChecked ? "checked" : ""} ${!state.isEditable ? "locked" : ""}`;
+        card.className = `habit-card ${val === "DONE" ? "state-done" : val === "NOT_DONE" ? "state-cross" : ""}`;
+
         card.innerHTML = `
-          <div class="pe-2">
+          <div>
             <div class="fw-semibold">${h.text}</div>
             ${h.isSalah ? `<span class="badge bg-success-subtle text-success border border-success-subtle">Fard Salah</span>` : ""}
           </div>
-          <div class="check-circle"><i class="bi bi-check-lg"></i></div>
+          <div class="choice-group">
+            <button type="button" class="choice-btn btn-tick ${val === "DONE" ? "active" : ""}" title="Done">
+              <i class="bi bi-check-lg"></i>
+            </button>
+            <button type="button" class="choice-btn btn-cross ${val === "NOT_DONE" ? "active" : ""}" title="Not Done">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
         `;
 
-        if (state.isEditable) {
-          card.addEventListener("click", () => {
-            state.checks[h.id] = !state.checks[h.id];
-            card.classList.toggle("checked", state.checks[h.id]);
-            updateScoreUI();
-          });
-        }
+        const btnTick = card.querySelector(".btn-tick");
+        const btnCross = card.querySelector(".btn-cross");
+
+        btnTick.addEventListener("click", () => {
+          state.responses[h.id] = "DONE";
+          card.classList.remove("state-cross");
+          card.classList.add("state-done");
+          btnTick.classList.add("active");
+          btnCross.classList.remove("active");
+          updateScoreUI();
+        });
+
+        btnCross.addEventListener("click", () => {
+          state.responses[h.id] = "NOT_DONE";
+          card.classList.remove("state-done");
+          card.classList.add("state-cross");
+          btnCross.classList.add("active");
+          btnTick.classList.remove("active");
+          updateScoreUI();
+        });
+
         container.appendChild(card);
       });
 
@@ -531,14 +564,36 @@
     }
 
     function updateScoreUI() {
-      const done = state.habits.filter(h => state.checks[h.id]).length;
-      const pct = Math.round((done / state.habits.length) * 100);
-      document.getElementById("lblScore").textContent = `${done} / ${state.habits.length} (${pct}%)`;
-      document.getElementById("progressBar").style.width = `${pct}%`;
+      const total = state.habits.length;
+      const done = state.habits.filter(h => state.responses[h.id] === "DONE").length;
+      const cross = state.habits.filter(h => state.responses[h.id] === "NOT_DONE").length;
+      const answered = done + cross;
+
+      document.getElementById("cntDone").textContent = done;
+      document.getElementById("cntCross").textContent = cross;
+      document.getElementById("cntPending").textContent = total - answered;
+      document.getElementById("lblAnsweredStatus").textContent = `${answered} / ${total} Answered`;
+
+      document.getElementById("progressBarDone").style.width = `${Math.round((done / total) * 100)}%`;
+      document.getElementById("progressBarCross").style.width = `${Math.round((cross / total) * 100)}%`;
+
+      if (answered === total) {
+        document.getElementById("saveErrorBanner").classList.add("d-none");
+      }
     }
 
-    // Save or Update Progress
+    // Save or Update Responses (requires all 14 items to have Tick or Cross)
     document.getElementById("btnSave").addEventListener("click", async () => {
+      const errBanner = document.getElementById("saveErrorBanner");
+      const unanswered = state.habits.filter(h => !state.responses[h.id]);
+
+      if (unanswered.length > 0) {
+        errBanner.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i> Please mark <strong>Tick (✓)</strong> or <strong>Cross (✕)</strong> for all remaining <strong>${unanswered.length}</strong> item(s) before saving.`;
+        errBanner.classList.remove("d-none");
+        return;
+      }
+
+      errBanner.classList.add("d-none");
       const btn = document.getElementById("btnSave");
       const selectedDate = document.getElementById("trackerDateInput").value;
       btn.disabled = true;
@@ -552,27 +607,31 @@
             adNo: state.currentUser.adNo,
             studentName: state.currentUser.name,
             date: selectedDate,
-            checks: state.checks
+            responses: state.responses
           })
         });
         const data = await res.json();
         if (data.status === "success") {
           const banner = document.getElementById("existingStatusBanner");
-          banner.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> <strong>${data.updated ? "Record Updated" : "Record Saved"}</strong> at ${data.savedTime}.`;
+          banner.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> <strong>${data.updated ? "Responses Updated" : "Responses Saved"}</strong> at ${data.savedTime}.`;
           banner.classList.remove("d-none");
 
-          btn.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i> Saved (${data.score}/14)!`;
+          btn.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i> Saved (${data.score}/14 Done)!`;
           setTimeout(() => {
-            btn.innerHTML = `<i class="bi bi-cloud-check-fill me-2"></i> Save Progress`;
+            btn.innerHTML = `<i class="bi bi-cloud-check-fill me-2"></i> Save My Responses`;
             btn.disabled = false;
           }, 1800);
         } else {
-          alert(data.message);
+          errBanner.textContent = data.message;
+          errBanner.classList.remove("d-none");
           btn.disabled = false;
+          btn.innerHTML = `<i class="bi bi-cloud-check-fill me-2"></i> Save My Responses`;
         }
       } catch (err) {
-        alert("Save error: " + err.message);
+        errBanner.textContent = "Save error: " + err.message;
+        errBanner.classList.remove("d-none");
         btn.disabled = false;
+        btn.innerHTML = `<i class="bi bi-cloud-check-fill me-2"></i> Save My Responses`;
       }
     });
 
@@ -583,11 +642,6 @@
       state.adminPin = "";
       document.getElementById("adminPinInput").value = "";
       showView("studentLoginView");
-    });
-
-    document.getElementById("adminEnableDateInput").addEventListener("change", (e) => {
-      e.target.value = clampDate(e.target.value);
-      document.getElementById("adminEnableDayLabel").textContent = formatReadableDateWithDay(e.target.value);
     });
 
     document.getElementById("adminFilterDateInput").addEventListener("change", (e) => {
@@ -625,33 +679,6 @@
       }
     });
 
-    document.getElementById("btnSetActiveDate").addEventListener("click", async () => {
-      const newDate = document.getElementById("adminEnableDateInput").value;
-      const msg = document.getElementById("adminActionMsg");
-      if (newDate < state.minAllowedDate || newDate > state.maxAllowedDate) {
-        msg.className = "small fw-semibold mt-2 text-danger";
-        msg.textContent = `Date must be between ${state.minAllowedDate} and ${state.maxAllowedDate}.`;
-        return;
-      }
-
-      msg.textContent = "Updating active date...";
-      const res = await fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "setAdminDate", adminPin: state.adminPin, newDate })
-      });
-      const data = await res.json();
-      if (data.status === "success") {
-        state.activeDate = data.activeDate;
-        document.getElementById("badgeActiveDate").textContent = formatReadableDateWithDay(data.activeDate);
-        document.getElementById("adminEnableDayLabel").textContent = formatReadableDateWithDay(data.activeDate);
-        msg.className = "small fw-semibold mt-2 text-success";
-        msg.textContent = "Student entry enabled for " + formatReadableDateWithDay(data.activeDate);
-      } else {
-        msg.className = "small fw-semibold mt-2 text-danger";
-        msg.textContent = data.message;
-      }
-    });
-
     document.getElementById("btnRefreshReport").addEventListener("click", async () => {
       const filterDate = clampDate(document.getElementById("adminFilterDateInput").value);
       document.getElementById("adminFilterDateInput").value = filterDate;
@@ -663,15 +690,10 @@
     function renderAdminDashboard(data) {
       state.consolidatedData = data.consolidated;
 
-      const clampedActive = clampDate(data.activeDate);
       const clampedTarget = clampDate(data.targetDate);
-
-      document.getElementById("adminEnableDateInput").value = clampedActive;
-      document.getElementById("adminEnableDayLabel").textContent = formatReadableDateWithDay(clampedActive);
       document.getElementById("adminFilterDateInput").value = clampedTarget;
       document.getElementById("adminFilterDayLabel").textContent = formatReadableDateWithDay(clampedTarget);
 
-      // KPIs
       const submittedCount = data.targetDateSubmissions;
       const total = data.totalStudents;
       document.getElementById("kpiSubmitted").textContent = `${submittedCount} / ${total}`;
@@ -698,8 +720,8 @@
           <td>${r.name}</td>
           <td>
             ${r.submitted
-              ? `<span class="badge bg-success-subtle text-success">Submitted</span>`
-              : `<span class="badge bg-danger-subtle text-danger">Pending</span>`}
+              ? `<span class="badge bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>Responded</span>`
+              : `<span class="badge bg-danger-subtle text-danger"><i class="bi bi-clock me-1"></i>No Response</span>`}
           </td>
           <td class="fw-semibold">${r.submitted ? `${r.dailyScore} / 14` : "-"}</td>
           <td>${r.submitted ? `${r.dailySalah} / 5` : "-"}</td>
@@ -735,7 +757,7 @@
         data: {
           labels: consolidated.map(s => s.adNo),
           datasets: [{
-            label: "Daily Score (out of 14)",
+            label: "Done (✓) out of 14",
             data: consolidated.map(s => s.dailyScore),
             backgroundColor: consolidated.map(s => s.submitted ? "#0f766e" : "#cbd5e1"),
             borderRadius: 6
@@ -753,18 +775,28 @@
         type: "bar",
         data: {
           labels: habitBreakdown.map(h => h.label),
-          datasets: [{
-            label: "Students Completed",
-            data: habitBreakdown.map(h => h.count),
-            backgroundColor: "#d97706",
-            borderRadius: 5
-          }]
+          datasets: [
+            {
+              label: "Done (✓)",
+              data: habitBreakdown.map(h => h.doneCount),
+              backgroundColor: "#16a34a",
+              borderRadius: 4
+            },
+            {
+              label: "Not Done (✕)",
+              data: habitBreakdown.map(h => h.crossCount),
+              backgroundColor: "#dc2626",
+              borderRadius: 4
+            }
+          ]
         },
         options: {
           indexAxis: "y",
           responsive: true,
-          scales: { x: { beginAtZero: true, max: consolidated.length || 20 } },
-          plugins: { legend: { display: false } }
+          scales: {
+            x: { stacked: true, beginAtZero: true, max: consolidated.length || 20 },
+            y: { stacked: true }
+          }
         }
       });
     }
